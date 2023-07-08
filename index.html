@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .container {
+      text-align: center;
+      justify-content: center;
+    }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
+      gap: 1px;
+      border: 1px solid #000;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      width: 800px;
+      height: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .grid-cell {
+      background-color: transparent;
+      width: 100%;
+      height: 100%;
+      border: 1px solid #000;
+    }
+
+    .player {
+      background-color: #00ff00;
+    }
+
+    .goal {
+      background-color: #ff0000;
+    }
+
+    .obstacle {
+      background-color: #000000;
+    }
+
+    .loss {
+      background-color: #ff00ff;
+    }
+
+    #status {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .arrow-buttons {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .arrow-button {
+      margin: 5px;
+    }
+
+    @media screen and (max-width: 600px) {
+      #grid {
+        width: 300px;
+        height: 300px;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Grid Game</h1>
+    <div id="grid"></div>
+    <div id="status"></div>
+    <div class="arrow-buttons">
+      <button class="arrow-button" id="up-button">Up</button>
+      <button class="arrow-button" id="down-button">Down</button>
+      <button class="arrow-button" id="left-button">Left</button>
+      <button class="arrow-button" id="right-button">Right</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const gridWidth = 9;
+      const gridHeight = 9;
+      let playerPosition = { x: 0, y: 0 };
+      const goalPosition = { x: gridWidth - 1, y: gridHeight - 1 };
+      const obstacles = [
+        { x: 2, y: 2 },
+        { x: 4, y: 4 },
+        { x: 6, y: 2 },
+        { x: 3, y: 6 },
+        { x: 8, y: 4 },
+        { x: 5, y: 8 },
+        { x: 7, y: 7 },
+        { x: 8, y: 0 }
+      ];
+
+      const grid = document.getElementById("grid");
+      const status = document.getElementById("status");
+      const upButton = document.getElementById("up-button");
+      const downButton = document.getElementById("down-button");
+      const leftButton = document.getElementById("left-button");
+      const rightButton = document.getElementById("right-button");
+
+      upButton.addEventListener("click", function() {
+        simulateKeyPress("ArrowUp");
+      });
+
+      downButton.addEventListener("click", function() {
+        simulateKeyPress("ArrowDown");
+      });
+
+      leftButton.addEventListener("click", function() {
+        simulateKeyPress("ArrowLeft");
+      });
+
+      rightButton.addEventListener("click", function() {
+        simulateKeyPress("ArrowRight");
+      });
+
+      function createGrid() {
+        for (let row = 0; row < gridHeight; row++) {
+          for (let col = 0; col < gridWidth; col++) {
+            const cell = document.createElement("div");
+            cell.className = "grid-cell";
+            grid.appendChild(cell);
+          }
+        }
+      }
+
+      function updateGrid() {
+        const cells = document.querySelectorAll(".grid-cell");
+        cells.forEach((cell, index) => {
+          cell.className = "grid-cell";
+          const cellX = index % gridWidth;
+          const cellY = Math.floor(index / gridWidth);
+          if (cellX === playerPosition.x && cellY === playerPosition.y) {
+            cell.classList.add("player");
+          } else if (cellX === goalPosition.x && cellY === goalPosition.y) {
+            cell.classList.add("goal");
+          } else if (obstacles.some(obstacle => obstacle.x === cellX && obstacle.y === cellY)) {
+            cell.classList.add("obstacle");
+          }
+        });
+      }
+
+      function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function handleKeyPress(event) {
+        const key = event.key.toLowerCase();
+        let steps = getRandomInt(1, 4);
+        let newPosition = { x: playerPosition.x, y: playerPosition.y };
+
+        if (key === "arrowup" && playerPosition.y - steps >= 0) {
+          newPosition.y -= steps;
+        } else if (key === "arrowdown" && playerPosition.y + steps < gridHeight) {
+          newPosition.y += steps;
+        } else if (key === "arrowleft" && playerPosition.x - steps >= 0) {
+          newPosition.x -= steps;
+        } else if (key === "arrowright" && playerPosition.x + steps < gridWidth) {
+          newPosition.x += steps;
+        }
+
+        if (!obstacles.some(obstacle => obstacle.x === newPosition.x && obstacle.y === newPosition.y)) {
+          playerPosition = newPosition;
+          updateGrid();
+
+          if (playerPosition.x === goalPosition.x && playerPosition.y === goalPosition.y) {
+            status.textContent = "You win!";
+            grid.classList.add("goal");
+            document.removeEventListener("keydown", handleKeyPress);
+          }
+        } else {
+          status.textContent = "You lose!";
+          grid.classList.add("loss");
+          document.removeEventListener("keydown", handleKeyPress);
+        }
+      }
+
+      function simulateKeyPress(keyCode) {
+        const event = new KeyboardEvent("keydown", {
+          key: keyCode,
+          keyCode: keyCode,
+          code: keyCode,
+          which: keyCode,
+          bubbles: true,
+        });
+        document.dispatchEvent(event);
+      }
+
+      createGrid();
+      updateGrid();
+      document.addEventListener("keydown", handleKeyPress);
+    });
+  </script>
+</body>
+</html>
